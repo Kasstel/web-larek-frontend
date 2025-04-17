@@ -7,6 +7,11 @@
 - src/ — исходные файлы проекта
 - src/components/ — папка с JS компонентами
 - src/components/base/ — папка с базовым кодом
+- src/components/common - папка с общими классами
+- src/components/model - папка для моделей
+- src/components/view - папка для отображений
+- src/components/view/CardView - папка для различных отображений карточки товара
+- src/components/view/OrderView - папка для отображений двух шагов ввода информации для заказа
 
 Важные файлы:
 
@@ -16,6 +21,7 @@
 - src/scss/styles.scss — корневой файл стилей
 - src/utils/constants.ts — файл с константами
 - src/utils/utils.ts — файл с утилитами
+
 
 ## Установка и запуск
 
@@ -60,304 +66,554 @@ yarn build
 ### 3.1. Класс EventEmitter
 
 Описание:
-Этот класс реализует брокер событий и позволяет подписываться на события, инициировать их и управлять подписками.
+  Этот класс реализует брокер событий и позволяет подписываться на события, инициировать их и управлять подписками.
 
 Методы:
 
-on<T extends object>(event: EventName, callback: (data: T) => void): void; — подписка на событие.
+  on<T extends object>(event: EventName, callback: (data: T) => void): void; — подписка на событие.
 
-emit<T extends object>(event: string, data?: T): void; — вызов обработчиков при возникновении события.
+  emit<T extends object>(event: string, data?: T): void; — вызов обработчиков при возникновении события.
 
-trigger<T extends object>(event: string, context?: Partial<T>): (data: T) => void; - создаёт функцию-триггер, которая при вызове будет генерировать событие event и объединять данные data с context
+  trigger<T extends object>(event: string, context?: Partial<T>): (data: T) => void; - создаёт функцию-триггер, которая при вызове будет генерировать событие event и объединять данные data с context
 
-off(event: EventName, callback: Function): отписка от события
+  off(event: EventName, callback: Function): отписка от события
 
-onAll(callback: Function): подписка на все события
+  onAll(callback: Function): подписка на все события
 
-offAll(): удаление всех обработчиков
+  offAll(): удаление всех обработчиков
 
 ### 3.2. Абстрактный класс Component<T>
 
 Описание:
-Родительский класс для всех классов слоя VIEW. Предоставляет базовые методы работы с DOM.
+  Родительский класс для всех классов слоя VIEW. Предоставляет базовые методы работы с DOM.
 
 Свойства:
 
-protected readonly container: HTMLElement - корневой DOM-элемент
+  protected readonly container: HTMLElement - корневой DOM-элемент
 
 Конструктор:
 
-protected constructor(protected readonly container: HTMLElement)
+  protected constructor(protected readonly container: HTMLElement)
 
 Методы:
 
-toggleClass(element: HTMLElement, className: string, force?: boolean): переключить класс
+  toggleClass(element: HTMLElement, className: string, force?: boolean): переключить класс
 
-protected setText(element: HTMLElement, value: unknown): установить текстовое содержимое
+  protected setText(element: HTMLElement, value: unknown): установить текстовое содержимое
 
-setDisabled(element: HTMLElement, state: boolean): сменить статус блокировки
+  setDisabled(element: HTMLElement, state: boolean): сменить статус блокировки
 
-protected setHidden(element: HTMLElement): скрыть элемент
+  protected setHidden(element: HTMLElement): скрыть элемент
 
-protected setVisible(element: HTMLElement): показать элемент
+  protected setVisible(element: HTMLElement): показать элемент
 
-protected setImage(element: HTMLImageElement, src: string, alt?: string): установить изображение
+  protected setImage(element: HTMLImageElement, src: string, alt?: string): установить изображение
 
-render(data?: Partial<T>): HTMLElement: вернуть корневой DOM-элемент
+  render(data?: Partial<T>): HTMLElement: вернуть корневой DOM-элемент
 
  ### 3.3. Абстрактный класс Model<T>
 
 Описание:
-Родительский класс для всех моделей данных. Обеспечивает управление состоянием и валидацию данных.
+  Родительский класс для всех моделей данных. Обеспечивает управление состоянием и валидацию данных.
 
 Свойства:
 
-protected events: IEvents - объект для работы с событиями
+  protected events: IEvents - объект для работы с событиями
 
 Конструктор:
 
-constructor(data: Partial<T>, protected events: IEvents): инициализирует модель на основе переданных данных
+  constructor(data: Partial<T>, protected events: IEvents): инициализирует модель на основе переданных данных
 
 Методы:
 
-emitChanges(event: string, payload?: object): отправляет событие об изменении модели
+  emitChanges(event: string, payload?: object): отправляет событие об изменении модели
+
+### 3.4. класс Api
+
+Описание:
+
+  Api — это универсальный класс для выполнения HTTP-запросов к серверу. Предоставляет базовые методы GET, POST и обрабатывает ответы от сервера. Используется как основа для построения специфичных API-клиентов.
+
+Свойства:
+  baseUrl: string — базовый URL для всех запросов.
+
+  options: RequestInit — конфигурация по умолчанию для всех fetch-запросов (например, заголовки).
+
+Конструктор:
+  constructor(baseUrl: string, options: RequestInit = {})  - При инициализации добавляется заголовок Content-Type: application/json ко всем запросам.
+
+Методы:
+  get(uri: string): Promise<object> - Выполняет GET-запрос по заданному uri.
+
+  post(uri: string, data: object, method: ApiPostMethods = 'POST'): Promise<object> - Выполняет POST-, PUT- или DELETE-запрос на указанный uri с передачей data в теле запроса.
+
+  protected handleResponse(response: Response): Promise<object> - Метод обрабатывает ответ от сервера. Если ответ успешный (status 2xx), возвращает JSON. В случае ошибки возвращает Promise.reject с текстом ошибки. Используется внутри get и post.
+
+### 3.5 класс Form<T> - это View, специализированный компонент для ввода и отправки данных, не знающий о модели и логике приложения.
+
+Описание:
+  Универсальный класс формы Form<T>, основанный на Component<IFormState>. Поддерживает привязку к событиям ввода, валидации и отправки. Используется для создания форм с автоматическим управлением состоянием, обработкой ошибок и интеграцией с событийной системой IEvents.
+
+Свойства:
+
+  container: HTMLFormElement — HTML-форма, переданная в качестве контейнера.
+
+  events: IEvents — объект событий, используемый для оповещения о действиях пользователя.
+
+  _submit: HTMLButtonElement — кнопка отправки формы (button[type=submit]).
+
+  _errors: HTMLElement — элемент отображения ошибок (.form__errors).
+
+Конструктор: 
+  constructor(container: HTMLFormElement, events: IEvents) - Инициализирует форму, настраивает прослушивание событий input и submit
+
+Методы:
+
+  protected onInputChange(field: keyof T, value: string): void
+  Вызывает событие изменения конкретного поля формы в формате:
+  ${formName}.${field}:change с данными { field, value }.
+
+  set valid(value: boolean): void
+  Включает или отключает кнопку отправки формы в зависимости от валидности.
+
+  set errors(value: string): void
+  Устанавливает сообщение об ошибке в блок .form__errors.
+
+  render(state: Partial<T> & IFormState): HTMLElement
+  Обновляет форму, применяя состояние валидации, ошибки и значения полей. Возвращает DOM-элемент формы.
+
+
+События:
+
+  input — вызывает событие изменения поля: ${formName}.${field}:change.
+
+  submit — вызывает событие отправки формы: ${formName}:submit.
+
+### 3.6 класс Modal
+
+Описание:
+  Modal — компонент, управляющий отображением модального окна. Обеспечивает открытие и закрытие модального окна, замену его содержимого, а также отправку событий открытия/закрытия. Наследуется от Component<IModalData>.
+
+Свойства:
+
+  _closeButton: HTMLButtonElement — кнопка закрытия модального окна (.modal__close).
+
+  _content: HTMLElement — контейнер содержимого модального окна (.modal__content).
+
+  events: IEvents — объект для отправки событий.
+
+  Наследуемые свойства от Component<IModalData>: container.
+
+Конструктор: constructor(container: HTMLElement, events: IEvents) - В конструкторе осуществляется инициализация элементов модального окна. 
+
+Методы:
+
+  set content(value: HTMLElement): void
+  Заменяет содержимое модального окна на переданный DOM-элемент.
+
+  open(): void
+  Активирует модальное окно, добавляя CSS-класс 'modal_active', и отправляет событие modal:open.
+
+  close(): void
+  Скрывает модальное окно, удаляя класс 'modal_active', очищает содержимое и отправляет событие modal:close.
+
+  render(data: IModalData): HTMLElement
+  Вызывает базовый render, после чего открывает модальное окно с заданными данными.
+
+События:
+
+'modal:open' — при открытии модального окна.
+
+'modal:close' — при его закрытии.
+
 
 ## 4. MODEL
 
 Модели данных, наследуемые от Model<T>:
 
-### 4.1 AppState - класс отследующий состояния приложения
-  clearCart() -очистка корзины после оформления заказа
+### 4.1 AppState - класс отвечающий за хранение, изменение и валидацию данных приложения
+Описание:
+  AppState — это центральное хранилище состояния приложения, основанное на модели Model<IAppState>. Управляет каталогом товаров, корзиной пользователя, контактной и платежной информацией, а также валидацией форм. Предназначен для синхронизации данных между представлением и логикой приложения.
 
-  getTotal() - расчитываем итоговую цену
+Свойства:
+  catalog: IProduct[] — список доступных товаров.
 
-  setCatalog(items: IProduct[]) - для обновления состояния каталога
+  preview: IProduct | null — текущий выбранный товар для предпросмотра.
 
-  setPreview(item: IProduct) - для обновления состояния информации о товаре
+  order: IOrder — объект текущего заказа, включая контактные данные, адрес, способ оплаты и список товаров.
 
-  setCart(item: CartItemView[]) - обновления состояния корзины
+  formErrors: FormError — объект с ошибками валидации форм (доставки и контактов).
 
-  setOrderField(field: keyof IOrderForm, value: string) - для обновления поля заказа
+Конструктор:
+  constructor() - Конструктор не принимает аргументы и инициализирует состояние заказа и пустой каталог.
 
-  validateOrder() - для валидации заказа
+Методы:
+  getCatalog(): IProduct[]
+  Возвращает текущий каталог товаров.
+
+  setCatalog(items: IProduct[]): void
+  Устанавливает каталог товаров и оповещает подписчиков об изменениях (items:changed).
+
+  setPreview(item: IProduct): void
+  Устанавливает товар для предпросмотра и вызывает событие preview:changed.
+
+  getPreview(): IProduct
+  Возвращает текущий товар в предпросмотре.
+
+  addToBasket(orderItem: IProduct): void
+  Добавляет товар в корзину, если он там ещё не находится, и вызывает события items:changed и preview:changed.
+
+  removeFromBasket(id: string): void
+  Удаляет товар по id из корзины и вызывает события items:changed и basket:open.
+
+  clearBasket(): void
+  Очищает корзину и вызывает события items:changed и preview:changed.
+
+  getBasketItems(): IProduct[]
+  Возвращает список товаров в корзине.
+
+  isInBasket(id: string): boolean
+  Проверяет, находится ли товар с заданным id в корзине.
+
+  getTotal(): number
+  Возвращает количество товаров в корзине.
+
+  getTotalAmount(): number
+  Возвращает общую стоимость всех товаров в корзине.
+
+  setPaymentMethod(method: string): void
+  Устанавливает способ оплаты и запускает валидацию данных доставки.
+
+  setOrderDeliveryField(value: string): void
+  Устанавливает адрес доставки и запускает его валидацию.
+
+  setOrderContactField(field: keyof IOrderStepTwo, value: string): void
+  Устанавливает значение контактного поля (email или телефон) и запускает его валидацию.
+
+  validateDelivery(): boolean
+  Проверяет корректность заполнения адреса и способа оплаты. В случае ошибок — сохраняет их и эмиттирует deliveryFormError:change.
+
+  validateContact(): boolean
+  Проверяет email и телефон на корректность. При ошибках — сохраняет их и эмиттирует contactFormError:change.
+
+  clearOrder(): void
+  Полностью сбрасывает данные заказа, включая способ оплаты, контакты, адрес и корзину.
+
+События:
+  items:changed  - перерисовывает каталог
+  preview:changed - перерисовывает предпросмотр товара
+  basket:open - сигнализирует о открытие корзины
+  contactFormError:change - сигнализирует о ошибках в контактах
+  deliveryFormError:change - сигнализирует о ошибках в доставке
 
 ## 5. View
 
 Классы слоя представления, наследуемые от Component<T>:
 
-### 5.1 CardViewModel extends Component<ProductView> - отображение данных товара 
+### 5.1 класс Card
+Описание:
+  Класс Card представляет карточку товара в интерфейсе. Он отвечает за отображение информации о продукте (название, изображение, категория, цена) и обработку пользовательских действий, таких как нажатие на кнопку. Расширяет базовый компонент Component<IProduct>.
 
 Свойства:
-protected _id: HTMLElement;
-protected _title: HTMLElement;
-protected _price: HTMLElement;
-protected _image: HTMLImageElement;
-protected _category: HTMLElement;
-protected _button: HTMLButtonElement
+  _title: HTMLElement — элемент, отображающий название продукта.
+
+  _image: HTMLImageElement — элемент изображения товара.
+
+  _category: HTMLElement — элемент, отображающий категорию товара.
+
+  _button: HTMLButtonElement — кнопка карточки для взаимодействия.
+
+  _price: HTMLElement — элемент, отображающий цену товара.
+
+  categoryKey: Record<string, string> — соответствие категорий и CSS-модификаторов для стилизации.
+
 
 Конструктор: 
-constructor(protected blockName: string, container: HTMLElement, events?: EventEmitter){
-    super(container)
-    this._title = ensureElement<HTMLElement>(`.${blockName}__title`, container);
-        this._image = ensureElement<HTMLImageElement>(`.${blockName}__image`, container);
-        this._button = container.querySelector(`.${blockName}`);
-        this._price = ensureElement<HTMLElement>(`.${blockName}__price`,container);
-        this._category = ensureElement<HTMLElement>(`.${blockName}__category`,container);
-        - инициализируем название, фото товара, кнопку для открытия превью и  категорию
-}
+  constructor(container: HTMLElement, actions?: IActions) - Инициализирует элементы карточки, настраивает обработчик события клика, если он передан в actions.
 
 Методы:
-set id(value: string):void	- Устанавливает id товара в соответствующий HTML-элемент.
+  set title(value: string): void — устанавливает текст заголовка карточки.
 
-get id():string	- Получает id товара из HTML-элемента.
+  set category(value: string): void — задаёт категорию товара и применяет соответствующий CSS-класс.
 
-set title(value: string):	void	 - Устанавливает заголовок товара.
+  set image(value: string): void — устанавливает URL изображения товара.
 
-get title():string	- Возвращает название товара.
+  set price(value: number): void — устанавливает цену товара в формате "X синапсов".
 
-set price(value: string):void	 - Устанавливает цену товара в HTML-элемент.
-
-get price():string	- Возвращает цену товара.
-
-set image(value: string):void	- Устанавливает URL изображения товара.
-
-get category():string
+  render(data: Partial<IProduct>): HTMLElement — принимает частичные данные товара и обновляет отображение карточки.
 
 События:
-events.emit(AppEvent.PRODUCT_CHANGED)
-events.emit(AppEvent.PRODUCT_ADDED)
-events.emit(AppEvent.PRODUCT_REMOVED)
+  click — если задан обработчик onClick в actions, он навешивается на кнопку карточки или сам контейнер. Используется для обработки взаимодействия пользователя с карточкой.
 
-### 5.2  класс Form<T> - это View, специализированный компонент для ввода и отправки данных, не знающий о модели и логике приложения.
-
-Он взаимодействует с остальной системой через события, используя IEvents, что полностью соответствует MVP-подходу.
-
-Model по-прежнему не знает ничего о Form<T> — она только обновляется в ответ на события.
-
-Presenter подписывается на эти события и связывает Form<T> с Model
-
-export class Form<T> extends Component<IFormState> {
-    protected _submit: HTMLButtonElement;
-    protected _errors: HTMLElement;
-
-    constructor(protected container: HTMLFormElement, protected events: IEvents) {
-        super(container);
-
-        this._submit = ensureElement<HTMLButtonElement>('button[type=submit]', this.container);
-        this._errors = ensureElement<HTMLElement>('.form__errors', this.container);
-
-        this.container.addEventListener('input', (e: Event) => {
-            const target = e.target as HTMLInputElement;
-            const field = target.name as keyof T;
-            const value = target.value;
-            this.onInputChange(field, value);
-        });
-
-        this.container.addEventListener('submit', (e: Event) => {
-            e.preventDefault();
-            this.events.emit(`${this.container.name}:submit`);
-        });
-    }
-
-    protected onInputChange(field: keyof T, value: string) {
-        this.events.emit(`${this.container.name}.${String(field)}:change`, {
-            field,
-            value
-        });
-    }
-
-    set valid(value: boolean) {
-        this._submit.disabled = !value;
-    }
-
-    set errors(value: string) {
-        this.setText(this._errors, value);
-    }
-
-    render(state: Partial<T> & IFormState) {
-        const {valid, errors, ...inputs} = state;
-        super.render({valid, errors});
-        Object.assign(this, inputs);
-        return this.container;
-
-    }
-}
-
-### 5.3 класс OrderStepOne
-
-export class OrderStepOne extends Form<OrderStepOne> {
-  constructor(container: HTMLFormElement, events: IEvents) {
-    super(container, events);
-
-    container.querySelectorAll('[name=paymentMethod]').forEach((el) => {
-      el.addEventListener("click", (e) => {
-        const target = e.target as HTMLInputElement;
-        this.onInputChange("paymentMethod", target.value as "card" | "cash");
-      });
-    });
-  }
-  set paymentMethod(method: 'cash' | 'online'| null) 
-  set address(value: string) - сеттер для адреса
-}
-
-
-
-
- ### 5.4  export class OrderStepTwo extends Form<OrderStepTwo> {
-  constructor(container: HTMLFormElement, events: IEvents) {
-    super(container, events);
-
-  }
-  set paymentMethod(method: 'cash' | 'online'| null) 
-  set address(value: string) - сеттер для адреса
-}
-
-    
-
- ### 5.5 CartView extends Component<ICartView>- представление корзины
-
+### 5.2  класс CardPreview 
 Описание:
-Компонент корзины, который управляет списком товаров, отображением итоговой суммы и обработкой событий.
+  Класс CardPreview расширяет функциональность базовой карточки Card, добавляя описание товара, кнопку добавления и возможность управления доступностью этой кнопки в зависимости от условий (например, наличия цены). Используется для предварительного просмотра товара и добавления его в корзину или список.
+Свойства:
+  _addButton: HTMLButtonElement — кнопка добавления товара.
+
+  _text: HTMLElement — элемент, отображающий описание товара (текст).
+
+  Наследует свойства класса Card:
+
+  _title, _image, _category, _button, _price, categoryKey.
+
+Конструктор:
+  constructor(container: HTMLElement, actions?: IActions) - Вызывает конструктор родительского класса Card, находит и сохраняет элементы описания и кнопки добавления. Если передан обработчик onClick, навешивает его на кнопку добавления.
+
+Методы:
+  priceDisabled(value: number | null): void — отключает кнопку добавления, если значение цены отсутствует (null или 0).
+
+  set description(value: string): void — устанавливает текст описания товара.
+
+  set added(value: boolean): void — отключает кнопку добавления, если товар уже добавлен.
+
+События:
+  click — если задан обработчик onClick в actions, он навешивается на кнопку добавления товара (.card__button).
+
+### 5.3 класс CardOrderItem
+Описание:
+  CardOrderItem — класс, расширяющий функциональность базовой карточки Card для отображения товара в корзине. Добавляет возможность удалить товар и отобразить его порядковый номер (ID) в заказе. 
 
 Свойства:
 
-protected _list: HTMLElement - контейнер для товаров
+  _removeBtn: HTMLButtonElement — кнопка удаления товара из корзины.
 
-protected _total: HTMLElement - отображение итоговой суммы
+  _basketId: HTMLElement — элемент, отображающий идентификатор позиции в заказе.
 
-protected _button: HTMLElement - кнопка оформления заказа
+  Унаследованные свойства от Card: _title, _image, _category, _button, _price, categoryKey.
 
 Конструктор:
 
-constructor(container: HTMLElement, protected events: EventEmitter){
-    this._list = ensureElement<HTMLElement>('.basket__list', this.container);
-        this._total = this.container.querySelector('.basket__price');
-        this._button = this.container.querySelector('.basket__button');
-инициализируем лист , тотал и кнопку оформления заказа
-}
+  constructor(container: HTMLElement, actions?: IActions) - Вызывает конструктор Card. Инициализирует элементы удаления и идентификатора позиции в корзине. Если передан onClick, он навешивается на кнопку удаления товара.
+
+Методы: 
+
+  set itemId(id: string): void — устанавливает ID товара в корзине.
+
+  get itemId(): string — возвращает ID, отображаемый в карточке.
+
+События:
+
+  click — при наличии onClick в actions, назначается на кнопку удаления .basket__item-delete.
+
+### 5.4 класс OrderStepOne
+
+Описание:
+
+  OrderStepOne — класс, расширяющий универсальную форму Form<IOrderStepOne>. Используется для оформления первого шага заказа, где пользователь выбирает способ оплаты и вводит адрес доставки. Обрабатывает переключение метода оплаты и отслеживает ввод адреса.
+
+Свойства:
+
+  _paymentMethod: HTMLButtonElement[] — список кнопок выбора метода оплаты (.button_alt).
+
+  _paymentContainer: HTMLDivElement — контейнер для кнопок методов оплаты (.order__buttons).
+
+  _address: HTMLInputElement — поле ввода адреса доставки.
+  
+  Наследуемые свойства от Form<IOrderStepOne>: container, events, _submit, _errors.
+
+Конструктор: 
+  constructor(container: HTMLFormElement, events: IEvents) - Выполняет инициализацию элементов формы: контейнера с кнопками оплаты и поля адреса. Вешает обработчик нажатий на кнопки оплаты. 
+
+Методы:
+  setTogglePayment(className: string): void
+  Переключает активную кнопку метода оплаты, добавляя/удаляя класс button_alt-active в зависимости от имени кнопки.
+
+  set address(value: string): void
+  Устанавливает значение адреса доставки в соответствующее поле ввода.
+
+События:
+
+  click на кнопке метода оплаты — вызывает order.payment:change с выбранным методом.
+
+  Унаследованные события от Form:
+
+  ${formName}.${field}:change при вводе данных.
+
+  ${formName}:submit при отправке формы.
+
+
+### 5.5 класс OrderStepTwo 
+Описание:
+  OrderStepTwo — класс, расширяющий форму Form<IOrderStepTwo>. Используется для второго шага оформления заказа, где пользователь вводит контактные данные: номер телефона и адрес электронной почты. Реализует установку значений этих полей и поддержку событий формы.
+
+Свойства:
+
+  _phone: HTMLInputElement — поле ввода номера телефона (name="phone").
+
+  _email: HTMLInputElement — поле ввода email-адреса (name="email").
+
+  Наследуемые свойства от Form<IOrderStepTwo>: container, events, _submit, _errors.
+
+Конструктор:
+  constructor(container: HTMLFormElement, events: IEvents)  -Инициализирует форму и находит механизм событий, реализованный в базовом классе Form.
 
 Методы:
 
-set items(items: HTMLElement[]): обновление списка товаров
+  set phone(value: string): void
+  Устанавливает значение номера телефона в поле ввода.
 
-set total(total: number): обновление итоговой суммы
+  set email(value: string): void
+  Устанавливает значение email в поле ввода.
 
-Генерируемые события:
+События:
 
-events.emit(AppEvent.ORDER_SUBMITTED) - отправка заказа
+  input — вызывает ${formName}.phone:change и ${formName}.email:change при изменении соответствующих полей.
 
-events.emit(AppEvent.CART_UPDATED) - обновление корзины
-
-### 5.6 CardPreview extends CardViewModel- представление подробностей о товаре
-
-protected _text: HTMLElement;
-protected _button: HTMLButtonElement
+  submit — вызывает ${formName}:submit при отправке формы.
 
 
- constructor(protected blockName: string, container: HTMLElement, actions?: ICardActions) {
-        super(container);
-          this._button = ensureElement<HTMLButtonElement>(`.button`, container);
-          this._text = ensureElement<HTMLElement>(`.${blockName}__text`, container);
-          ...                инициализирую описание и кнопку "Добавить в корзину" в конструкторе
+ ### 5.6 класс Basket
 
- }
-set id(value: string):void	- Устанавливает id товара в соответствующий HTML-элемент.
+Описание: 
+  Basket — класс, представляющий корзину покупок на сайте. Отображает список товаров в корзине, общую сумму и кнопку для перехода к оформлению заказа. Управляет отображением списка продуктов и общей суммой, а также активирует/деактивирует кнопку в зависимости от наличия товаров.
 
-get id():string	- Получает id товара из HTML-элемента.
+Свойства:
 
-## 6 Класс Modal
-Назначение:
-Управление модальными окнами на всех страницах приложения.
+  _list: HTMLElement — элемент для отображения списка товаров в корзине (.basket__list).
 
-Функции:
+  _total: HTMLElement — элемент для отображения общей суммы (.basket__price).
 
-open(content: Component): void — открытие модального окна с заданным контентом.
+  _button: HTMLElement — кнопка для перехода к оформлению заказа (.basket__button).
 
-close(): void — закрытие окна (реагирует как на клик вне окна, так и на нажатие на иконку закрытия).
+  events: IEvents — объект для отправки событий.
 
-Обработка событий закрытия окна.
+  Наследуемые свойства от Component<IBasketView>: container.
 
-## 7 ApiClient
+Конструктор:
+  constructor(container: HTMLElement, events: IEvents) - В конструкторе осуществляется инициализация элементов корзины
 
-export interface IApiClient {
-	getProducts(): Promise<IProduct[]>; // Получение списка товаров
-	getProduct(id: string): Promise<IProduct>; //Получение товара
-  placeOrder<T>(orderData: any): Promise<T>; // Оформление заказа
-}
+Методы:
+
+  set productList(items: HTMLElement[]): void
+  Устанавливает список товаров в корзине. Если товары есть, они отображаются, а кнопка для оформления заказа становится активной. Если корзина пуста, отображается сообщение "Корзина пуста", и кнопка блокируется.
+
+  set totalAmount(total: number): void
+  Устанавливает общую сумму заказа, добавляя текст "синапсов" к числовому значению.
+
+  render(data: Partial<IBasketView>): HTMLElement
+  Применяет данные для рендера корзины и возвращает контейнер.
+
+События:
+
+  click на кнопке оформления заказа — вызывает событие order:open.
+
+
+### 5.7 класс Page
+Описание:
+  Page — класс, представляющий страницу с каталогом товаров и корзиной. Управляет отображением элементов каталога, количеством товаров в корзине и состоянием блокировки страницы. Интегрирован с событиями, связанными с взаимодействием с корзиной.
+
+Свойства:
+
+  _catalog: HTMLElement — элемент каталога товаров (.gallery).
+
+  _basket: HTMLButtonElement — кнопка для перехода к корзине (.header__basket).
+
+  _counter: HTMLElement — элемент для отображения количества товаров в корзине (.header__basket-counter).
+
+  _wrapper: HTMLElement — обертка страницы, которая может быть заблокирована или разблокирована (.page__wrapper).
+
+  events: IActions — объект для управления событиями на странице.
+
+  Наследуемые свойства от Component<IPage>: container.
+
+Конструктор:
+  constructor(container: HTMLElement, events: IActions) - В конструкторе осуществляется инициализация элементов страницы (контейнер для каталога, корзины, счетчик и обертка страницы)
+
+Методы:
+
+  set catalog(items: HTMLElement[]): void
+  Устанавливает элементы каталога товаров. Если передан список элементов, он заменяет текущие.
+
+  set counter(addedItems: number): void
+  Устанавливает количество товаров в корзине и отображает его в соответствующем элементе.
+
+  set locked(value: boolean): void
+  Блокирует или разблокирует страницу, добавляя или удаляя класс page__wrapper_locked.
+
+События:
+
+  click на кнопке корзины — вызывает переданный в events обработчик.
+
+## 6 ApiClient
+Описание:
+  ApiClient — класс, реализующий клиент для работы с API. Он предоставляет методы для получения списка товаров и оформления заказов. Использует базовый класс Api для выполнения HTTP-запросов и добавляет функциональность для работы с изображениями через CDN.
+
+Свойства:
+
+  cdn: string — URL для доступа к ресурсам CDN (например, изображениям товаров).
+
+  Наследуемые свойства от Api:
+
+  baseUrl: string — базовый URL для API.
+
+  options: RequestInit — опции для запросов.
+
+Конструктор:
+
+  constructor(cdn: string, baseUrl: string, options?: RequestInit) - В конструкторе инициализируется базовый класс Api, а также сохраняется URL для CDN, который используется для построения полных путей к изображениям товаров.
+
+Методы:
+
+  getProducts(): Promise<IProduct[]>
+  Получает список товаров с сервера. Каждый товар будет дополнен полным путем к изображению, используя CDN.
+
+  placeOrder(order: IOrderPost): Promise<OrderResponse>
+  Отправляет запрос для оформления заказа и возвращает ответ с информацией о заказе.
+
+События:
+  Нет событий.
 
 ## 8 Список событий
-Компоненты обмениваются сообщениями через EventEmitter, например, при добавлении товара в корзину, изменении состояния заказа или закрытии модальных окон.
+Вот список всех возможных событий, которые используются в коде:
 
-export enum AppEvent {
-	PRODUCT_ADDED = 'PRODUCT_ADDED',
-	PRODUCT_REMOVED = 'PRODUCT_REMOVED',
-	PRODUCT_CHANGED = 'PRODUCT_CHANGED',
-	CART_UPDATED = 'CART_UPDATED',
-	ORDER_SUBMITTED = 'ORDER_SUBMITTED',
-	MODAL_OPENED = 'MODAL_OPENED',
-	MODAL_CLOSED = 'MODAL_CLOSED',
-	PREVIEW = 'CARD_PREVIEW'
-}
+items:changed
+Событие, которое вызывается при изменении каталога товаров.
+
+card:selected
+Событие, которое вызывается при выборе карточки товара.
+
+product:add
+Событие, которое вызывается при добавлении товара в корзину.
+
+preview:changed
+Событие, которое вызывается при изменении данных превью товара.
+
+modal:open
+Событие, которое вызывается для открытия модального окна.
+
+modal:close
+Событие, которое вызывается для закрытия модального окна.
+
+basket:open
+Событие, которое вызывается для открытия корзины.
+
+item:remove
+Событие, которое вызывается при удалении товара из корзины.
+
+order:open
+Событие, которое вызывается при открытии формы оформления заказа.
+
+order.payment:change
+Событие, которое вызывается при изменении метода оплаты.
+
+order.address:change
+Событие, которое вызывается при изменении поля адреса доставки.
+
+deliveryFormError:change
+Событие, которое вызывается при изменении состояния ошибок в форме доставки.
+
+order:submit
+Событие, которое вызывается при отправке формы с данными заказа.
+
+contacts.*:change
+Событие для изменения данных в полях контактов (с использованием регулярных выражений для отслеживания любых изменений в полях типа contacts.*).
+
+contactFormError:change
+Событие, которое вызывается при изменении состояния ошибок в форме контактов.
+
+contacts:submit
+Событие, которое вызывается при отправке формы с данными контактов.
 
 ## Presenter не вынесен в отдельный класс (логика будет реализована в index.ts)
 
@@ -365,9 +621,11 @@ export enum AppEvent {
 Пользотатель нажимает на кнопку товара чтобы посмотреть подробности  (Preview товара)
 1. View реагирует на действие пользователя и генерирует событие (при помощи emit)
 
-2. Presenter обрабатывает событие и вызывает метод модели (или API) (в моем случае в index.ts будет прописана конструкция типа: events.on<(AppEvent.PREVIEW, callback>) )
+2. Presenter обрабатывает событие и вызывает метод модели (или API) (в моем случае в index.ts будет прописана конструкция типа: events.on<('card:selected', (item: IProduct)=>{
+  appData.setPreview(item)
+})>) 
 
-3. Модель вызывает состояние setPreview и генерирует событие: App.Event.MODAL_OPENED
+3. Модель вызывает состояние setPreview и генерирует событие: this.emitChanges('preview:changed', item);
 
-4. Presenter обрабатывает событие и вызывает рендер View (CardPreview)
+4. Presenter обрабатывает событие ('preview:changed') и вызывает рендер View (CardPreview)
 
