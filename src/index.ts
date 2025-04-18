@@ -1,9 +1,9 @@
 import './scss/styles.scss';
-import { Modal } from './components/base/Modal';
+import { Modal } from './components/common/Modal';
 import { cloneTemplate, createElement, ensureElement } from './utils/utils';
 import { EventEmitter } from './components/base/events';
 import { API_URL, CDN_URL } from './utils/constants';
-import { ApiClient } from './components/common/ApiClient';
+import { ApiClient } from './components/services/ApiClient';
 import { AppState } from './components/model/AppData';
 import {
 	IOrderPost,
@@ -87,6 +87,7 @@ events.on('preview:changed', () => {
 			price: previewData.price,
 			description: previewData.description,
 			image: previewData.image,
+			category: previewData.category
 		}),
 	});
 });

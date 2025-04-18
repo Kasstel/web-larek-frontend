@@ -1,6 +1,8 @@
 import { IActions, IProduct } from '../../../types';
 import { Component } from '../../base/Component';
 import { ensureElement } from '../../../utils/utils';
+import { settings } from "../../../utils/constants";
+
 
 export class Card extends Component<IProduct> {
 	protected _title: HTMLElement;
@@ -9,13 +11,7 @@ export class Card extends Component<IProduct> {
 	protected _button: HTMLButtonElement;
 	protected _price: HTMLElement;
 
-	protected categoryKey: Record<string, string> = {
-		'софт-скил': '_soft',
-		'хард-скил': '_hard',
-		кнопка: '_button',
-		дополнительное: '_additional',
-		другое: '_other',
-	};
+	
 
 	constructor(container: HTMLElement, actions?: IActions) {
 		super(container);
@@ -41,13 +37,13 @@ export class Card extends Component<IProduct> {
 		this.setText(this._title, value);
 	}
 
-	set category(value: string) {
+	set category(value: keyof typeof settings.categoryKey) {
 		if (!this._category) return; // Защита от ошибки
 		this.setText(this._category, value);
 		const category = this._category.classList[0];
-		this._category.className = '';
-		this._category.classList.add(`${category}`);
-		this._category.classList.add(`${category}${this.categoryKey[value]}`);
+	this._category.className = '';
+	this.toggleClass(this._category, category, true);
+	this.toggleClass(this._category, `${category}${settings.categoryKey[value]}`, true);
 	}
 
 	set image(value: string) {

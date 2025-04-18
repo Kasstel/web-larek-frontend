@@ -1,7 +1,7 @@
 import { IOrderStepOne } from '../../../types';
 import { ensureElement } from '../../../utils/utils';
 import { IEvents } from '../../base/events';
-import { Form } from '../../base/Form';
+import { Form } from '../../common/Form';
 
 export class OrderStepOne extends Form<IOrderStepOne> {
 	protected _paymentMethod: HTMLButtonElement[];

@@ -8,6 +8,7 @@
 - src/components/ — папка с JS компонентами
 - src/components/base/ — папка с базовым кодом
 - src/components/common - папка с общими классами
+- src/components/services - папка с кодом для организации логики, связанной с API
 - src/components/model - папка для моделей
 - src/components/view - папка для отображений
 - src/components/view/CardView - папка для различных отображений карточки товара
@@ -148,84 +149,6 @@ yarn build
   post(uri: string, data: object, method: ApiPostMethods = 'POST'): Promise<object> - Выполняет POST-, PUT- или DELETE-запрос на указанный uri с передачей data в теле запроса.
 
   protected handleResponse(response: Response): Promise<object> - Метод обрабатывает ответ от сервера. Если ответ успешный (status 2xx), возвращает JSON. В случае ошибки возвращает Promise.reject с текстом ошибки. Используется внутри get и post.
-
-### 3.5 класс Form<T> - это View, специализированный компонент для ввода и отправки данных, не знающий о модели и логике приложения.
-
-Описание:
-  Универсальный класс формы Form<T>, основанный на Component<IFormState>. Поддерживает привязку к событиям ввода, валидации и отправки. Используется для создания форм с автоматическим управлением состоянием, обработкой ошибок и интеграцией с событийной системой IEvents.
-
-Свойства:
-
-  container: HTMLFormElement — HTML-форма, переданная в качестве контейнера.
-
-  events: IEvents — объект событий, используемый для оповещения о действиях пользователя.
-
-  _submit: HTMLButtonElement — кнопка отправки формы (button[type=submit]).
-
-  _errors: HTMLElement — элемент отображения ошибок (.form__errors).
-
-Конструктор: 
-  constructor(container: HTMLFormElement, events: IEvents) - Инициализирует форму, настраивает прослушивание событий input и submit
-
-Методы:
-
-  protected onInputChange(field: keyof T, value: string): void
-  Вызывает событие изменения конкретного поля формы в формате:
-  ${formName}.${field}:change с данными { field, value }.
-
-  set valid(value: boolean): void
-  Включает или отключает кнопку отправки формы в зависимости от валидности.
-
-  set errors(value: string): void
-  Устанавливает сообщение об ошибке в блок .form__errors.
-
-  render(state: Partial<T> & IFormState): HTMLElement
-  Обновляет форму, применяя состояние валидации, ошибки и значения полей. Возвращает DOM-элемент формы.
-
-
-События:
-
-  input — вызывает событие изменения поля: ${formName}.${field}:change.
-
-  submit — вызывает событие отправки формы: ${formName}:submit.
-
-### 3.6 класс Modal
-
-Описание:
-  Modal — компонент, управляющий отображением модального окна. Обеспечивает открытие и закрытие модального окна, замену его содержимого, а также отправку событий открытия/закрытия. Наследуется от Component<IModalData>.
-
-Свойства:
-
-  _closeButton: HTMLButtonElement — кнопка закрытия модального окна (.modal__close).
-
-  _content: HTMLElement — контейнер содержимого модального окна (.modal__content).
-
-  events: IEvents — объект для отправки событий.
-
-  Наследуемые свойства от Component<IModalData>: container.
-
-Конструктор: constructor(container: HTMLElement, events: IEvents) - В конструкторе осуществляется инициализация элементов модального окна. 
-
-Методы:
-
-  set content(value: HTMLElement): void
-  Заменяет содержимое модального окна на переданный DOM-элемент.
-
-  open(): void
-  Активирует модальное окно, добавляя CSS-класс 'modal_active', и отправляет событие modal:open.
-
-  close(): void
-  Скрывает модальное окно, удаляя класс 'modal_active', очищает содержимое и отправляет событие modal:close.
-
-  render(data: IModalData): HTMLElement
-  Вызывает базовый render, после чего открывает модальное окно с заданными данными.
-
-События:
-
-'modal:open' — при открытии модального окна.
-
-'modal:close' — при его закрытии.
-
 
 ## 4. MODEL
 
@@ -534,6 +457,109 @@ yarn build
 События:
 
   click на кнопке корзины — вызывает переданный в events обработчик.
+
+### 5.8 класс Success
+
+ Описание:
+  Класс Success отображает модальное окно успешного завершения заказа. Показывает сумму списанных синапсов и предоставляет пользователю возможность закрыть это окно.
+
+Свойства:
+  protected _close: HTMLElement
+  Кнопка закрытия окна.
+
+  protected _total: HTMLElement
+  Элемент, в котором отображается сообщение с суммой списания.
+
+Конструктор:
+  constructor(container: HTMLElement, actions: IActions)
+  Инициализирует компоненты интерфейса и вешает обработчик на кнопку закрытия, если он передан в actions.onClick.
+
+Методы:
+  set total(total: string): void
+  Устанавливает текст в _total в формате: "Списано {total} синапсов".
+
+События:
+  onClick (передаётся через actions)
+  Вызывается при клике на кнопку закрытия окна успешного заказа.
+  Обычно используется для закрытия модального окна (например, modal.close()).
+
+
+### 5.9 класс Form<T> - это View, специализированный компонент для ввода и отправки данных, не знающий о модели и логике приложения.
+
+Описание:
+  Универсальный класс формы Form<T>, основанный на Component<IFormState>. Поддерживает привязку к событиям ввода, валидации и отправки. Используется для создания форм с автоматическим управлением состоянием, обработкой ошибок и интеграцией с событийной системой IEvents.
+
+Свойства:
+
+  container: HTMLFormElement — HTML-форма, переданная в качестве контейнера.
+
+  events: IEvents — объект событий, используемый для оповещения о действиях пользователя.
+
+  _submit: HTMLButtonElement — кнопка отправки формы (button[type=submit]).
+
+  _errors: HTMLElement — элемент отображения ошибок (.form__errors).
+
+Конструктор: 
+  constructor(container: HTMLFormElement, events: IEvents) - Инициализирует форму, настраивает прослушивание событий input и submit
+
+Методы:
+
+  protected onInputChange(field: keyof T, value: string): void
+  Вызывает событие изменения конкретного поля формы в формате:
+  ${formName}.${field}:change с данными { field, value }.
+
+  set valid(value: boolean): void
+  Включает или отключает кнопку отправки формы в зависимости от валидности.
+
+  set errors(value: string): void
+  Устанавливает сообщение об ошибке в блок .form__errors.
+
+  render(state: Partial<T> & IFormState): HTMLElement
+  Обновляет форму, применяя состояние валидации, ошибки и значения полей. Возвращает DOM-элемент формы.
+
+
+События:
+
+  input — вызывает событие изменения поля: ${formName}.${field}:change.
+
+  submit — вызывает событие отправки формы: ${formName}:submit.
+
+### 5.10 класс Modal
+
+Описание:
+  Modal — компонент, управляющий отображением модального окна. Обеспечивает открытие и закрытие модального окна, замену его содержимого, а также отправку событий открытия/закрытия. Наследуется от Component<IModalData>.
+
+Свойства:
+
+  _closeButton: HTMLButtonElement — кнопка закрытия модального окна (.modal__close).
+
+  _content: HTMLElement — контейнер содержимого модального окна (.modal__content).
+
+  events: IEvents — объект для отправки событий.
+
+  Наследуемые свойства от Component<IModalData>: container.
+
+Конструктор: constructor(container: HTMLElement, events: IEvents) - В конструкторе осуществляется инициализация элементов модального окна. 
+
+Методы:
+
+  set content(value: HTMLElement): void
+  Заменяет содержимое модального окна на переданный DOM-элемент.
+
+  open(): void
+  Активирует модальное окно, добавляя CSS-класс 'modal_active', и отправляет событие modal:open.
+
+  close(): void
+  Скрывает модальное окно, удаляя класс 'modal_active', очищает содержимое и отправляет событие modal:close.
+
+  render(data: IModalData): HTMLElement
+  Вызывает базовый render, после чего открывает модальное окно с заданными данными.
+
+События:
+
+'modal:open' — при открытии модального окна.
+
+'modal:close' — при его закрытии.
 
 ## 6 ApiClient
 Описание:

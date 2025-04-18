@@ -1,6 +1,6 @@
 import { IOrderStepTwo } from '../../../types';
 import { IEvents } from '../../base/events';
-import { Form } from '../../base/Form';
+import { Form } from '../../common/Form';
 
 export class OrderStepTwo extends Form<IOrderStepTwo> {
 	protected _phone: HTMLInputElement;
